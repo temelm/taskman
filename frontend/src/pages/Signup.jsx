@@ -3,8 +3,23 @@ import {
   useEffect
 } from 'react'
 import {
+  useSelector,
+  useDispatch
+} from 'react-redux'
+import {
+  useNavigate
+} from 'react-router-dom'
+import {
+  toast
+} from 'react-toastify'
+import {
   FaUserAlt
 } from 'react-icons/fa'
+import {
+  createUser,
+  reset
+} from '../features/auth/authSlice'
+import Spinner from '../components/Spinner'
 
 function Signup () {
   const [formData, setFormData] = useState({
@@ -19,6 +34,27 @@ function Signup () {
     confirmPassword
   } = formData
 
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+
+  const {
+    user,
+    isLoading,
+    isSuccess,
+    isFailure,
+    message
+  } = useSelector((state) => state.auth)
+
+  useEffect(() => {
+    if (isFailure) {
+      toast.error(message)
+    }
+    if (isSuccess || user) {
+      navigate('/')
+    }
+    dispatch(reset())
+  }, [user, isSuccess, isFailure, message, navigate, dispatch])
+
   const onChange = (event) => {
     setFormData((previousState) => ({
       ...previousState,
@@ -28,6 +64,21 @@ function Signup () {
 
   const onSubmit = (event) => {
     event.preventDefault()
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match.')
+    } else {
+      const userData = {
+        email,
+        password
+      }
+
+      dispatch(createUser(userData))
+    }
+  }
+
+  if (isLoading) {
+    return <Spinner />
   }
 
   return (
